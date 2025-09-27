@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Parental Control Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;font-family:'Roboto',sans-serif;background:linear-gradient(135deg,#4facfe,#00f2fe);}
+.container{display:flex;width:100%;max-width:960px;height:90vh;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.2);position:relative;}
+
+/* --- SIDEBAR --- */
+.sidebar{width:220px;background:#0d47a1;color:#fff;display:flex;flex-direction:column;align-items:center;padding-top:20px;transition:all 0.3s;}
+.sidebar h2{font-size:20px;margin-bottom:30px;text-align:center;}
+.nav-item{width:100%;padding:12px 20px;margin:5px 0;cursor:pointer;border-radius:12px;transition:0.3s;}
+.nav-item:hover,.nav-item.active{background:#1565c0;}
+.nav-item span{margin-left:10px;font-size:16px;}
+
+/* --- MAIN CONTENT --- */
+.main-content{flex:1;padding:20px;overflow-y:auto;position:relative;}
+
+/* --- STEP CONTENT --- */
+.step{display:none;flex-direction:column;align-items:center;animation:slideIn 0.5s ease;}
+.step.active{display:flex;}
+.feature-img{width:90%;max-width:300px;border-radius:15px;margin:15px 0;box-shadow:0 6px 20px rgba(0,0,0,0.2);}
+input{width:90%;padding:14px;border-radius:12px;border:1px solid #90caf9;font-size:16px;margin-bottom:15px;}
+button{width:90%;padding:15px;background:#0d47a1;color:#fff;font-size:16px;border:none;border-radius:50px;box-shadow:0 5px 15px rgba(0,0,0,0.2);cursor:pointer;transition:all 0.3s;margin-top:10px;}
+button:hover{transform:scale(1.05);background:#1565c0;}
+
+/* --- CARDS --- */
+.card{width:90%;background:#f9f9f9;border-radius:16px;padding:15px;margin:12px 0;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px rgba(0,0,0,0.1);transition:all 0.3s;}
+.card:hover{transform:translateY(-4px);box-shadow:0 10px 25px rgba(0,0,0,0.15);}
+.app-left{display:flex;align-items:center;gap:15px;}
+.app-left img{width:50px;height:50px;border-radius:12px;}
+.app-left span{font-size:18px;font-weight:500;}
+.status{font-size:14px;color:red;}
+
+/* --- GAMING ALERTS --- */
+.alert-card{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-radius:16px;background:#e3f2fd;transition:0.3s;margin-bottom:12px;}
+.alert-card:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(0,0,0,0.15);}
+.alert-card.big-icon img{width:70px;height:70px;}
+.alert-card.small-icon img{width:45px;height:45px;}
+.alert-card div{flex:1;margin-left:12px;text-align:left;}
+.alert-card h3{margin-bottom:5px;color:#0d47a1;font-size:18px;}
+.alert-card p{font-size:14px;color:#555;margin:0;}
+
+/* --- INTERNET CARD --- */
+.internet-card{display:flex;align-items:center;justify-content:space-between;width:90%;background:#fff3e0;padding:15px 18px;border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,0.1);margin:15px 0;}
+
+/* --- TOGGLE SWITCH --- */
+.switch{position:relative;display:inline-block;width:50px;height:28px;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;transition:0.4s;border-radius:34px;}
+.slider:before{position:absolute;content:"";height:22px;width:22px;left:3px;bottom:3px;background:#fff;transition:0.4s;border-radius:50%;}
+input:checked + .slider{background:#4facfe;}
+input:checked + .slider:before{transform:translateX(22px);}
+
+/* --- HISTORY BOX --- */
+#historyBox{width:90%;background:#f1f8e9;border-radius:16px;padding:15px;margin-top:15px;max-height:220px;overflow-y:auto;font-size:14px;}
+
+/* --- ANIMATIONS --- */
+@keyframes slideIn{from{transform:translateX(30px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+/* --- LOGIN MODAL --- */
+#loginModal{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;justify-content:center;align-items:center;z-index:999;}
+#loginBox{background:#fff;padding:30px;border-radius:20px;width:300px;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h2>Parental Control</h2>
+        <div class="nav-item active" onclick="navigate('homePage')">🏠 Home</div>
+        <div class="nav-item" onclick="navigate('passwordPage')">🔑 Password</div>
+        <div class="nav-item" onclick="navigate('screenPage')">⏱ Screen Time</div>
+        <div class="nav-item" onclick="navigate('appsPage')">📱 Blocked Apps</div>
+        <div class="nav-item" onclick="navigate('gamingPage')">🎮 Gaming Alerts</div>
+        <div class="nav-item" onclick="navigate('internetPage')">🌐 Internet</div>
+        <div class="nav-item" onclick="navigate('reportPage')">📊 Reports</div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <!-- HOME PAGE -->
+        <div id="homePage" class="step active">
+            <img src="Parent.jpg" class="feature-img">
+            <h2>Welcome!</h2>
+            <p>Control screen time, filter apps, manage internet, and stay safe online.</p>
+        </div>
+
+        <!-- PASSWORD CHANGE -->
+        <div id="passwordPage" class="step">
+            <img src="Password.jpg" class="feature-img">
+            <h2>Change Password</h2>
+            <input type="password" id="oldPass" placeholder="Old Password">
+            <input type="password" id="newPass" placeholder="New Password">
+            <button onclick="updatePassword()">Update</button>
+            <small id="passMsg"></small>
+        </div>
+
+        <!-- SCREEN TIME -->
+        <div id="screenPage" class="step">
+            <img src="Screen.jpg" class="feature-img">
+            <h2>Set Screen Time Limit</h2>
+            <input type="number" id="limit" placeholder="Minutes per day">
+            <button onclick="saveScreenTime()">Save</button>
+        </div>
+
+        <!-- BLOCKED APPS -->
+        <div id="appsPage" class="step">
+            <img src="content_filter.jpg" class="feature-img">
+            <h2>Blocked Apps</h2>
+            <div class="card app-item">
+                <div class="app-left"><img src="discord.jpg"><span>Discord</span></div>
+                <label class="switch"><input type="checkbox" checked onchange="toggleApp('discord')"><span class="slider"></span></label>
+            </div>
+            <div class="card app-item">
+                <div class="app-left"><img src="facebook.jpg"><span>Facebook</span></div>
+                <label class="switch"><input type="checkbox" checked onchange="toggleApp('facebook')"><span class="slider"></span></label>
+            </div>
+            <div class="card app-item">
+                <div class="app-left"><img src="instagram.jpg"><span>Instagram</span></div>
+                <label class="switch"><input type="checkbox" checked onchange="toggleApp('instagram')"><span class="slider"></span></label>
+            </div>
+        </div>
+
+        <!-- GAMING ALERTS -->
+        <div id="gamingPage" class="step">
+            <img src="Gaming.jpg" class="feature-img">
+            <h2>🎮 Safe Gaming Alerts</h2>
+            <div class="alert-card big-icon">
+                <img src="cyberbullying.jpg">
+                <div><h3>Cyberbullying</h3><p>Get notified about potential cyberbullying activity.</p></div>
+                <label class="switch"><input type="checkbox" id="cyber"><span class="slider"></span></label>
+            </div>
+            <div class="alert-card small-icon">
+                <img src="predator.jpg">
+                <div><h3>Predators</h3><p>Receive alerts if suspicious predator activity is detected.</p></div>
+                <label class="switch"><input type="checkbox" id="pred"><span class="slider"></span></label>
+            </div>
+        </div>
+
+        <!-- INTERNET CONTROL -->
+        <div id="internetPage" class="step">
+            <img src="Internet.jpg" class="feature-img">
+            <h2>Internet Control</h2>
+            <div class="internet-card">
+                <div><h3>Internet Access</h3><p>Toggle to pause or enable internet instantly.</p></div>
+                <label class="switch"><input type="checkbox" id="internetToggle" checked><span class="slider"></span></label>
+            </div>
+        </div>
+
+        <!-- ACTIVITY REPORTS -->
+        <div id="reportPage" class="step">
+            <img src="History.jpg" class="feature-img">
+            <h2>Activity Reports</h2>
+            <div id="historyBox"></div>
+        </div>
+    </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div id="loginModal">
+    <div id="loginBox">
+        <h2>🔒 Enter Password</h2>
+        <input type="password" id="passwordInput" placeholder="Enter Password">
+        <button onclick="checkPassword()">Login</button>
+        <small id="loginMsg"></small>
+    </div>
+</div>
+
+<script>
+let settings={screen_time:0,apps:{discord:true,facebook:true,instagram:true},cyber:false,pred:false,internet:true,history:[]};
+let savedPassword=localStorage.getItem("parentPassword")||"1234";
+
+// LOGIN FUNCTION
+function checkPassword(){
+    let input=document.getElementById("passwordInput").value;
+    if(input===savedPassword){
+        document.getElementById("loginModal").style.display="none";
+        alert("✅ Login successful!");
+    }else{
+        document.getElementById("loginMsg").innerText="❌ Wrong password!";
+    }
+}
+
+// NAVIGATION
+function navigate(id){
+    if(document.getElementById("loginModal").style.display!=="none"){
+        alert("Please login first!");
+        return;
+    }
+    document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+// PASSWORD
+function updatePassword(){
+    let oldPass=document.getElementById("oldPass").value;
+    let newPass=document.getElementById("newPass").value;
+    if(oldPass!==savedPassword){alert("Old password incorrect!");return;}
+    if(newPass.length<4){alert("Password too short!");return;}
+    savedPassword=newPass;
+    localStorage.setItem("parentPassword",newPass);
+    alert("✅ Password updated!");
+}
+
+// SCREEN TIME
+function saveScreenTime(){
+    let val=Number(document.getElementById("limit").value);
+    if(val<=0){alert("Enter valid minutes.");return;}
+    settings.screen_time=val; log(`Screen time set: ${val} mins`); alert("✅ Screen time saved!");
+}
+
+// APPS
+function toggleApp(app){
+    let checkbox=event.target;
+    settings.apps[app]=checkbox.checked;
+    log(`${app} ${checkbox.checked?"blocked":"allowed"}`);
+}
+
+// GAMING
+function saveGaming(){
+    settings.cyber=document.getElementById("cyber").checked;
+    settings.pred=document.getElementById("pred").checked;
+    log(`Gaming alerts - Cyber:${settings.cyber}, Pred:${settings.pred}`);
+}
+
+// INTERNET
+function saveInternet(){
+    settings.internet=document.getElementById("internetToggle").checked;
+    log(settings.internet?"Internet enabled":"Internet paused");
+}
+
+// LOGGING
+function log(msg){
+    settings.history.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
+    document.getElementById("historyBox").innerText=settings.history.join("\n");
+}
+</script>
+</body>
+</html>
