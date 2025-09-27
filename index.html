@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Parental Control Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<style>
+html, body { height: 100%; margin: 0; font-family: 'Roboto', sans-serif; background: linear-gradient(135deg,#42a5f5,#81d4fa); display: flex; justify-content: center; align-items: center; }
+.container { width: 100%; max-width: 600px; background: rgba(255,255,255,0.95); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
+.header { text-align: center; padding: 30px 20px; color:#1565c0; }
+.header h1 { margin:0; font-size:28px; }
+.step { display:none; flex-direction:column; align-items:center; padding:20px; animation: fadeIn 0.5s ease; text-align:center; }
+.step.active { display:flex; }
+input, textarea { width:80%; padding:12px; margin:10px 0; font-size:16px; border-radius:10px; border:1px solid #90caf9; }
+button { padding:12px 25px; font-size:16px; color:#fff; background:#2196f3; border:none; border-radius:50px; cursor:pointer; transition:0.3s; margin-top:15px; box-shadow:0 6px 18px rgba(0,0,0,0.2); }
+button:hover { background:#1976d2; transform:scale(1.05); }
+img.feature-img { width:90%; max-width:400px; border-radius:15px; margin-bottom:20px; box-shadow:0 6px 20px rgba(0,0,0,0.2); }
+#history, #status4 { margin-top:20px; background:#f1f8e9; padding:15px; border-radius:15px; width:80%; max-width:500px; font-size:14px; text-align:left; }
+.switch { position: relative; display: inline-block; width:50px; height:28px; margin:10px; }
+.switch input { opacity:0; width:0; height:0; }
+.slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; border-radius:28px; transition:.4s; }
+.slider:before { position:absolute; content:""; height:22px; width:22px; left:3px; bottom:3px; background:white; border-radius:50%; transition:.4s; }
+input:checked + .slider { background:#2196f3; }
+input:checked + .slider:before { transform: translateX(22px); }
+.progress-bar-container { width:80%; height:10px; background:#cfd8dc; border-radius:10px; overflow:hidden; margin:20px auto; }
+.progress-bar { height:100%; width:0%; background:linear-gradient(90deg,#42a5f5,#1e88e5); transition:width 0.5s ease; }
+@keyframes fadeIn { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+@media(max-width:500px){ input,textarea,button{width:90%; font-size:14px;} img.feature-img{width:100%;} }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Parental Control Dashboard</h1>
+    <div class="progress-bar-container"><div class="progress-bar" id="progress"></div></div>
+  </div>
+
+  <!-- Step 0 -->
+  <div id="home" class="step active">
+    <img src="Parent.jpg" alt="Welcome" class="feature-img">
+    <h2>Welcome!</h2>
+    <p>Control screen time, filter content, stay safe online, and track activity easily!</p>
+    <button onclick="showStep(1)">Get Started</button>
+  </div>
+
+  <!-- Step 1 -->
+  <div id="step1" class="step">
+    <img src="Screen.jpg" alt="Screen Time" class="feature-img">
+    <h2>Screen Time Limit</h2>
+    <input type="number" id="limit" placeholder="Minutes per day">
+    <button onclick="nextStep1()">Next</button>
+  </div>
+
+  <!-- Step 2 -->
+  <div id="step2" class="step">
+    <img src="content_filter.jpg" alt="Content Filter" class="feature-img">
+    <h2>Content Filtering</h2>
+    <textarea id="blockedKeywords" placeholder="Blocked keywords, comma separated" rows="3"></textarea>
+    <button onclick="nextStep2()">Next</button>
+  </div>
+
+  <!-- Step 3 -->
+  <div id="step3" class="step">
+    <img src="Gaming.jpg" alt="Safe Gaming" class="feature-img">
+    <h2>Safe Gaming Alerts</h2>
+    <div>
+      <label>Cyberbullying</label>
+      <label class="switch"><input type="checkbox" id="cyberbullying"><span class="slider"></span></label>
+    </div>
+    <div>
+      <label>Predators</label>
+      <label class="switch"><input type="checkbox" id="predator"><span class="slider"></span></label>
+    </div>
+    <button onclick="nextStep3()">Next</button>
+  </div>
+
+  <!-- Step 4 -->
+  <div id="step4" class="step">
+    <img src="Internet.jpg" alt="Internet Control" class="feature-img">
+    <h2>Internet Control</h2>
+    <div>
+      <label>Internet Access</label>
+      <label class="switch"><input type="checkbox" id="internetToggle" checked><span class="slider"></span></label>
+    </div>
+    <div id="status4"></div>
+    <button onclick="nextStep4()">Next</button>
+  </div>
+
+  <!-- Step 5 -->
+  <div id="step5" class="step">
+    <img src="History.jpg" alt="History" class="feature-img">
+    <h2>Activity Reports</h2>
+    <div id="history"></div>
+    <button onclick="startOver()">Start Over</button>
+  </div>
+</div>
+
+<script>
+let settings = { screen_time_limit:0, internet_paused:false, blocked_keywords:[], cyberbullying_alert:false, predator_alert:false, history:[] };
+const totalSteps = 5;
+
+function logActivity(act){ settings.history.push(`[${new Date().toLocaleTimeString()}] ${act}`); }
+function showStep(step){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.getElementById(step===0?'home':'step'+step).classList.add('active');
+  document.getElementById('progress').style.width = (step===0?0:(step-1)/(totalSteps-1)*100) + "%";
+  window.scrollTo(0,0);
+}
+
+function nextStep1(){
+  const val = Number(document.getElementById('limit').value);
+  if(!val || val<=0){ alert("Enter valid minutes."); return; }
+  settings.screen_time_limit = val;
+  logActivity(`Screen time set: ${val} mins`);
+  showStep(2);
+}
+
+function nextStep2(){
+  const val = document.getElementById('blockedKeywords').value.split(',').map(k=>k.trim()).filter(k=>k);
+  if(val.length===0){ alert("Enter at least one keyword."); return; }
+  settings.blocked_keywords = val;
+  logActivity(`Blocked keywords: ${val.join(', ')}`);
+  showStep(3);
+}
+
+function nextStep3(){
+  const cyber = document.getElementById('cyberbullying').checked;
+  const predator = document.getElementById('predator').checked;
+  if(!cyber && !predator){ alert("Enable at least one alert."); return; }
+  settings.cyberbullying_alert = cyber;
+  settings.predator_alert = predator;
+  logActivity(`Alerts - Cyberbullying: ${cyber}, Predators: ${predator}`);
+  showStep(4);
+}
+
+function nextStep4(){
+  const internetAccess = document.getElementById('internetToggle').checked;
+  settings.internet_paused = !internetAccess;
+  logActivity(internetAccess ? "Internet enabled" : "Internet paused");
+  document.getElementById('status4').innerText = internetAccess ? "Internet enabled" : "Internet paused";
+  showStep(5); 
+  showHistory();
+}
+
+function showHistory(){ document.getElementById('history').innerText = settings.history.join('\n') || "No activity yet."; }
+
+function startOver(){
+  settings = { screen_time_limit:0, internet_paused:false, blocked_keywords:[], cyberbullying_alert:false, predator_alert:false, history:[] };
+  document.getElementById('limit').value=''; 
+  document.getElementById('blockedKeywords').value=''; 
+  document.getElementById('cyberbullying').checked=false; 
+  document.getElementById('predator').checked=false; 
+  document.getElementById('internetToggle').checked=true; 
+  document.getElementById('status4').innerText=''; 
+  document.getElementById('history').innerText='';
+  showStep(0);
+}
+</script>
+</body>
+    </html>
