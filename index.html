@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parental Control Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary:#0062ff;
+  --secondary:#2575fc;
+  --bg:#f0f4ff;
+  --card-bg:#fff;
+  --shadow:0 8px 20px rgba(0,0,0,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Poppins',sans-serif;background:var(--bg);display:flex;height:100vh;overflow:hidden;}
+.container{display:flex;width:100%;height:100%;}
+.sidebar{width:220px;background:#111827;color:#fff;display:flex;flex-direction:column;padding:20px;}
+.sidebar h2{text-align:center;margin-bottom:25px;}
+.sidebar .menu-item{padding:12px 15px;margin:5px 0;border-radius:10px;cursor:pointer;transition:0.3s;}
+.sidebar .menu-item:hover,
+.sidebar .menu-item.active{background:var(--secondary);}
+.main{flex:1;overflow-y:auto;padding:20px;background:var(--bg);display:flex;flex-direction:column;gap:20px;}
+.page{display:none;flex-direction:column;gap:15px;}
+.page.active{display:flex;}
+.feature-img{width:100%;max-height:200px;border-radius:15px;object-fit:cover;box-shadow:var(--shadow);}
+.card{background:var(--card-bg);padding:15px;border-radius:12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;}
+.card h3{color:var(--primary);}
+ul{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:10px;}
+ul li{background:#f5f5f5;padding:10px 12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;}
+button.add-btn, button{
+  padding:6px 12px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;transition:0.3s;font-weight:bold;
+}
+button.add-btn:hover, button:hover{opacity:0.85;}
+input[type=text], input[type=password], input[type=number]{padding:6px 10px;border-radius:6px;border:1px solid #ccc;width:70%;}
+.toggle{display:flex;align-items:center;margin:5px 0;}
+.toggle label{margin-left:10px;font-weight:500;}
+.summary-item{display:flex;justify-content:space-between;padding:10px 15px;margin:5px 0;border-radius:8px;background:#e6f0ff;font-weight:500;}
+.badge{font-weight:bold;color:#fff;background:var(--primary);padding:4px 10px;border-radius:12px;}
+.header-switch{display:flex;justify-content:center;margin-top:10px;}
+.header-switch button{padding:8px 15px;margin:0 5px;border:none;border-radius:8px;cursor:pointer;font-weight:bold;}
+.header-switch button.active{background:#ffca28;color:#000;}
+/* Login Modal */
+#loginModal{
+  position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;justify-content:center;align-items:center;z-index:100;
+}
+#loginBox{
+  background:#fff;padding:30px;border-radius:20px;width:360px;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,0.15);
+}
+#loginBox input{width:90%;padding:12px;margin:10px 0;border:1px solid #ccc;border-radius:12px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN MODAL -->
+<div id="loginModal">
+  <div id="loginBox">
+    <h2>🔒 Enter Password</h2>
+    <input type="password" id="passwordInput" placeholder="Enter Password">
+    <button id="loginBtn">Login</button>
+    <small id="loginMsg" style="color:red;"></small>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h2>Dashboard</h2>
+    <div class="menu-item active" data-page="appsPage">📱 Apps</div>
+    <div class="menu-item" data-page="websitesPage">🌐 Websites</div>
+    <div class="menu-item" data-page="keywordsPage">🔑 Keywords</div>
+    <div class="menu-item" data-page="cyberPage">🎮 Cyber Safety</div>
+    <div class="menu-item" data-page="locationPage">📍 Location</div>
+    <div class="menu-item parentOnly" data-page="passwordPage">🔐 Password</div>
+    <div class="menu-item parentOnly" data-page="summaryPage">📊 Summary</div>
+    <div class="header-switch">
+      <button id="parentBtn" class="active">Parent</button>
+      <button id="childBtn">Child</button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+    <!-- Apps -->
+    <div class="page active" id="appsPage">
+      <img src="content_filter.jpg" class="feature-img">
+      <div class="card">
+        <h3>Blocked Apps</h3>
+        <ul id="blockedAppsList">
+          <li>YouTube</li>
+          <li>Chrome</li>
+          <li>Instagram</li>
+        </ul>
+        <div class="parentOnly">
+          <input type="text" id="newAppInput" placeholder="Add new app">
+          <button class="add-btn" id="addAppBtn">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Websites -->
+    <div class="page" id="websitesPage">
+      <img src="Parent.jpg" class="feature-img">
+      <div class="card">
+        <h3>Blocked Websites</h3>
+        <ul id="blockedWebList"><li>example.com</li></ul>
+        <div class="parentOnly">
+          <input type="text" id="newWebInput" placeholder="Add new website">
+          <button class="add-btn" id="addWebBtn">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Keywords -->
+    <div class="page" id="keywordsPage">
+      <img src="content_filter.jpg" class="feature-img">
+      <div class="card">
+        <h3>Blocked Keywords</h3>
+        <ul id="blockedKeywordsList"><li>Violence</li><li>Drugs</li></ul>
+        <div class="parentOnly">
+          <input type="text" id="newKeywordInput" placeholder="Add new keyword">
+          <button class="add-btn" id="addKeywordBtn">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cyber Safety -->
+    <div class="page" id="cyberPage">
+      <img src="Internet.jpg" class="feature-img">
+      <div class="card">
+        <h3>Cyber Safety</h3>
+        <div class="toggle">
+          <input type="checkbox" id="cyberbullying" checked>
+          <label for="cyberbullying">Cyberbullying Protection</label>
+        </div>
+        <div class="toggle">
+          <input type="checkbox" id="predators" checked>
+          <label for="predators">Predator Alerts</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Location -->
+    <div class="page" id="locationPage">
+      <img src="Gaming.jpg" class="feature-img">
+      <div class="card">
+        <h3>Live Location Tracking</h3>
+        <p id="gpsLocation">Fetching location...</p>
+      </div>
+    </div>
+
+    <!-- Password -->
+    <div class="page parentOnly" id="passwordPage">
+      <img src="Password.jpg" class="feature-img">
+      <h2>Change Password</h2>
+      <input type="password" id="oldPass" placeholder="Old Password">
+      <input type="password" id="newPass" placeholder="New Password">
+      <input type="password" id="confirmPass" placeholder="Confirm New Password">
+      <button id="updatePasswordBtn">Update Password</button>
+      <small id="passMsg" style="color:red;"></small>
+    </div>
+
+    <!-- Summary -->
+    <div class="page parentOnly" id="summaryPage">
+      <img src="History.jpg" class="feature-img">
+      <div class="card summary" id="summary">
+        <h3>Dashboard Summary</h3>
+        <div class="summary-item">Blocked Apps: <span id="summaryApps" class="badge">3</span></div>
+        <div class="summary-item">Blocked Websites: <span id="summaryWeb" class="badge">1</span></div>
+        <div class="summary-item">Blocked Keywords: <span id="summaryKeywords" class="badge">2</span></div>
+        <div class="summary-item">Cyberbullying Protection: <span id="summaryCyber" class="badge">Enabled</span></div>
+        <div class="summary-item">Predator Alerts: <span id="summaryPredator" class="badge">Enabled</span></div>
+        <div class="summary-item">Location: <span id="summaryLocation" class="badge">ON</span></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// Password setup
+let savedPassword = localStorage.getItem("parentPassword") || "1234";
+
+// Login
+document.getElementById("loginBtn").addEventListener("click", ()=>{
+  let input = document.getElementById("passwordInput").value;
+  if(input===savedPassword){
+    document.getElementById("loginModal").style.display="none";
+  } else {
+    document.getElementById("loginMsg").innerText="❌ Wrong password!";
+  }
+});
+
+// Navigation
+const navItems=document.querySelectorAll('.menu-item');
+const pages=document.querySelectorAll('.page');
+navItems.forEach(item=>{
+  item.addEventListener('click',()=>{
+    navItems.forEach(i=>i.classList.remove('active'));
+    item.classList.add('active');
+    pages.forEach(p=>p.classList.remove('active'));
+    document.getElementById(item.dataset.page).classList.add('active');
+  });
+});
+
+// Parent/Child toggle
+const parentBtn = document.getElementById('parentBtn');
+const childBtn = document.getElementById('childBtn');
+let isParent = true;
+parentBtn.addEventListener('click', ()=>{
+  isParent=true; parentBtn.classList.add('active'); childBtn.classList.remove('active'); updateView();
+});
+childBtn.addEventListener('click', ()=>{
+  isParent=false; childBtn.classList.add('active'); parentBtn.classList.remove('active'); updateView();
+});
+
+function updateView(){
+  document.querySelectorAll('.parentOnly').forEach(el=>{
+    el.style.display = isParent ? 'block' : 'none';
+  });
+}
+
+// Add items
+function addItem(listId,inputId){
+  const input=document.getElementById(inputId);
+  if(input.value.trim()==='') return;
+  const ul=document.getElementById(listId);
+  const li=document.createElement('li'); li.textContent=input.value.trim();
+  ul.appendChild(li); input.value='';
+  updateSummary();
+}
+
+// Add events
+document.getElementById('addAppBtn')?.addEventListener('click',()=>{addItem('blockedAppsList','newAppInput');});
+document.getElementById('addWebBtn')?.addEventListener('click',()=>{addItem('blockedWebList','newWebInput');});
+document.getElementById('addKeywordBtn')?.addEventListener('click',()=>{addItem('blockedKeywordsList','newKeywordInput');});
+
+// Password update
+document.getElementById('updatePasswordBtn')?.addEventListener('click',()=>{
+  const oldP=document.getElementById('oldPass').value;
+  const newP=document.getElementById('newPass').value;
+  const confirmP=document.getElementById('confirmPass').value;
+  if(oldP!==savedPassword){document.getElementById('passMsg').innerText="Old password incorrect!";return;}
+  if(newP.length<4){document.getElementById('passMsg').innerText="Password too short!";return;}
+  if(newP!==confirmP){document.getElementById('passMsg').innerText="Passwords do not match!";return;}
+  savedPassword=newP; localStorage.setItem("parentPassword",newP);
+  alert("✅ Password updated!");
+});
+
+// Update summary dynamically
+function updateSummary(){
+  if(!isParent) return;
+  document.getElementById('summaryApps').innerText = document.getElementById('blockedAppsList').children.length;
+  document.getElementById('summaryWeb').innerText = document.getElementById('blockedWebList').children.length;
+  document.getElementById('summaryKeywords').innerText = document.getElementById('blockedKeywordsList').children.length;
+  document.getElementById('summaryCyber').innerText = document.getElementById('cyberbullying').checked?'Enabled':'Disabled';
+  document.getElementById('summaryPredator').innerText = document.getElementById('predators').checked?'Enabled':'Disabled';
+}
+updateSummary();
+document.getElementById('cyberbullying').addEventListener('change',updateSummary);
+document.getElementById('predators').addEventListener('change',updateSummary);
+
+// Live GPS Tracking
+function updateLocation(){
+  const locEl = document.getElementById('gpsLocation');
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(position=>{
+      locEl.innerText = `Lat: ${position.coords.latitude.toFixed(5)}, Lon: ${position.coords.longitude.toFixed(5)}`;
+    }, err=>{
+      locEl.innerText = "Location access denied!";
+    });
+  } else {
+    locEl.innerText = "Geolocation not supported!";
+  }
+}
+setInterval(updateLocation, 5000);
+updateLocation();
+</script>
+</body>
+</html>
