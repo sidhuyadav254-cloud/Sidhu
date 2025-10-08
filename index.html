@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Aura-like Parental Control — Frontend Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f6ff;
+    --card:#ffffff;
+    --primary:#0062ff;
+    --accent:#2575fc;
+    --muted:#6b7280;
+    --shadow: 0 6px 18px rgba(2,6,23,0.08);
+    --glass: rgba(255,255,255,0.7);
+  }
+  *{box-sizing:border-box;font-family:'Poppins',sans-serif}
+  body{margin:0;background:linear-gradient(180deg,#eef4ff 0%, #f8fbff 100%);min-height:100vh;color:#111}
+  /* Role selection overlay */
+  #roleWrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:50}
+  .roleCard{width:960px;max-width:96%;display:flex;gap:24px;background:var(--card);padding:28px;border-radius:14px;box-shadow:var(--shadow);align-items:center}
+  .roleLeft{flex:1}
+  .roleRight{width:320px;display:flex;flex-direction:column;gap:10px;align-items:center}
+  .roleBtn{width:100%;padding:12px 14px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer}
+  .roleBtn.secondary{background:#e6f0ff;color:var(--primary);border:1px solid var(--primary)}
+  .small{color:var(--muted);font-size:13px}
+  /* App frame */
+  #app{display:none;margin:24px auto;max-width:1100px;background:transparent;border-radius:12px;overflow:hidden;min-height:70vh}
+  .topbar{display:flex;align-items:center;gap:20px;padding:14px 20px;background:transparent}
+  .brand{display:flex;gap:10px;align-items:center}
+  .brand h1{font-size:20px;margin:0;color:var(--primary)}
+  .roleBadge{padding:6px 10px;border-radius:999px;background:var(--primary);color:#fff;font-weight:600;font-size:13px}
+  .container{display:flex;gap:18px}
+  .sidebar{width:260px;background:var(--card);border-radius:12px;padding:14px;box-shadow:var(--shadow);height:70vh}
+  .sidebar .logo{font-weight:700;color:var(--primary);margin-bottom:12px}
+  .nav{display:flex;flex-direction:column;gap:6px}
+  .nav button{background:transparent;border:none;text-align:left;padding:10px;border-radius:8px;cursor:pointer;font-weight:600;color:#123}
+  .nav button.active{background:linear-gradient(90deg,var(--primary),var(--accent));color:#fff;box-shadow:0 6px 18px rgba(0,98,255,0.14)}
+  .content{flex:1;background:var(--card);border-radius:12px;padding:18px;box-shadow:var(--shadow);min-height:70vh;overflow:auto}
+  .page{display:none}
+  .page.active{display:block}
+  .page h2{margin:0 0 12px 0;color:var(--primary)}
+  .card{background:linear-gradient(180deg,#fff,#fbfdff);padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(2,6,23,0.04);margin-bottom:12px}
+  .field{display:flex;gap:8px;align-items:center;margin:8px 0}
+  input[type=text], input[type=password], input[type=number], select{padding:8px 10px;border-radius:8px;border:1px solid #e6eefc;flex:1}
+  .btn{padding:10px 14px;border-radius:8px;border:none;background:var(--primary);color:#fff;cursor:pointer;font-weight:600}
+  .btn.ghost{background:transparent;border:1px solid #e6eefc;color:var(--primary)}
+  .list{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{background:#f3f6ff;padding:8px 10px;border-radius:8px;display:flex;gap:8px;align-items:center}
+  .chip button{border:none;background:transparent;color:var(--muted);cursor:pointer}
+  .muted{color:var(--muted)}
+  .flex{display:flex;gap:10px;align-items:center}
+  .rightTop{margin-left:auto;display:flex;gap:10px;align-items:center}
+  .smallBadge{font-size:12px;padding:6px 10px;border-radius:999px;background:#eef3ff;color:var(--primary);font-weight:700}
+  .warning{color:#b45309;background:#fff7ed;padding:8px;border-radius:8px}
+  /* responsive */
+  @media(max-width:900px){
+    .roleCard{flex-direction:column;align-items:stretch}
+    .sidebar{display:none}
+    .roleWrap{padding:8px}
+    #app{margin:8px}
+  }
+  /* tiny helpers */
+  .mutedSmall{font-size:13px;color:var(--muted)}
+  .center{display:flex;align-items:center;justify-content:center}
+  .space{height:10px}
+  .nextBtn{margin-top:12px}
+  .danger{background:#ffecec;color:#b91c1c;padding:8px;border-radius:8px}
+  .requestList{max-height:160px;overflow:auto;padding:6px}
+</style>
+</head>
+<body>
+
+<!-- ROLE SELECTION -->
+<div id="roleWrap">
+  <div class="roleCard">
+    <div class="roleLeft">
+      <h2 style="margin:0 0 8px 0">Aura-style Parental Control — Demo Frontend</h2>
+      <p class="small">Choose who is using the app. Parent has full control. Child sees restrictions. Parent can optionally allow the child to edit settings directly.</p>
+      <ul style="margin-top:12px">
+        <li class="mutedSmall">Each feature is on its own page (Apps, Websites, Keywords, Screen Time, Content Filtering, Cyber Safety, Live Location, Password, Summary, Settings).</li>
+        <li class="mutedSmall">Data is saved to <strong>localStorage</strong> so it persists across refreshes.</li>
+      </ul>
+    </div>
+    <div class="roleRight">
+      <div style="width:100%">
+        <button class="roleBtn" id="btnParent">I am Parent</button>
+      </div>
+      <div style="width:100%">
+        <button class="roleBtn secondary" id="btnChild">I am Child</button>
+      </div>
+      <div class="small center" style="margin-top:8px">Default parent password is <code>1234</code> (you can change in Settings)</div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="brand">
+      <img src="https://img.icons8.com/fluency-systems-filled/24/0062ff/family.png" alt="logo"/>
+      <h1>Aura Demo</h1>
+      <div id="roleTag" class="roleBadge" style="margin-left:8px">Parent</div>
+    </div>
+    <div class="rightTop">
+      <div id="userInfo" class="mutedSmall">User: <span id="userRole">Parent</span></div>
+      <button class="btn ghost" id="logoutBtn">Logout</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <aside class="sidebar">
+      <div class="logo">Aura • Controls</div>
+      <nav class="nav" id="navList">
+        <button data-page="dashboard" class="navItem active">Dashboard</button>
+        <button data-page="apps" class="navItem">Blocked Apps</button>
+        <button data-page="websites" class="navItem">Blocked Websites</button>
+        <button data-page="keywords" class="navItem">Blocked Keywords</button>
+        <button data-page="screen" class="navItem">Screen Time</button>
+        <button data-page="content" class="navItem">Content Filtering</button>
+        <button data-page="cyber" class="navItem">Cyber Safety</button>
+        <button data-page="location" class="navItem">Live Location</button>
+        <button data-page="requests" class="navItem">Child Requests</button>
+        <button data-page="summary" class="navItem">Summary</button>
+        <button data-page="settings" class="navItem">Settings</button>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <!-- DASHBOARD -->
+      <section class="page active" id="dashboard">
+        <div style="display:flex;gap:16px;align-items:center">
+          <h2>Dashboard</h2>
+          <div class="mutedSmall">Overview of configured controls</div>
+        </div>
+        <div class="card">
+          <div style="display:flex;gap:14px;align-items:center">
+            <div>
+              <strong>Current Role:</strong> <span id="dashRole" class="smallBadge">Parent</span>
+            </div>
+            <div>
+              <strong>Child Edit Enabled:</strong> <span id="dashAllowChild" class="mutedSmall">No</span>
+            </div>
+            <div style="margin-left:auto">
+              <button class="btn" onclick="goTo('apps')">Open Blocked Apps</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0 0 8px 0">Quick summary</h3>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <div class="chip"><strong id="qApps">0</strong> Apps blocked</div>
+            <div class="chip"><strong id="qWeb">0</strong> Websites blocked</div>
+            <div class="chip"><strong id="qKeys">0</strong> Keywords</div>
+            <div class="chip"><strong id="qScreen">0</strong> Screen time rules</div>
+            <div class="chip"><strong id="qReq">0</strong> Child requests</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- APPS PAGE -->
+      <section class="page" id="apps">
+        <h2>Blocked Apps</h2>
+        <div class="card">
+          <div class="field">
+            <input type="text" id="appInput" placeholder="Type app name (e.g., YouTube)">
+            <button class="btn" id="addAppBtn">Add</button>
+          </div>
+          <div class="mutedSmall">Apps blocked on child's device.</div>
+          <div class="space"></div>
+          <div class="list" id="appsList"></div>
+          <div class="nextBtn">
+            <button class="btn ghost" onclick="goTo('websites')">Next ➡ Websites</button>
+            <button class="btn" onclick="saveAndNotify()">Save & Apply</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- WEBSITES PAGE -->
+      <section class="page" id="websites">
+        <h2>Blocked Websites</h2>
+        <div class="card">
+          <div class="field">
+            <input type="text" id="webInput" placeholder="Type domain (example.com)">
+            <button class="btn" id="addWebBtn">Add</button>
+          </div>
+          <div class="mutedSmall">Domains will be blocked on child's device.</div>
+          <div class="space"></div>
+          <div class="list" id="webList"></div>
+          <div class="nextBtn">
+            <button class="btn ghost" onclick="goTo('keywords')">Next ➡ Keywords</button>
+            <button class="btn" onclick="saveAndNotify()">Save & Apply</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- KEYWORDS PAGE -->
+      <section class="page" id="keywords">
+        <h2>Blocked Keywords</h2>
+        <div class="card">
+          <div class="field">
+            <input type="text" id="keyInput" placeholder="e.g., violence">
+            <button class="btn" id="addKeyBtn">Add</button>
+          </div>
+          <div class="mutedSmall">Keywords used for content filtering.</div>
+          <div class="space"></div>
+          <div class="list" id="keyList"></div>
+          <div class="nextBtn">
+            <button class="btn ghost" onclick="goTo('screen')">Next ➡ Screen Time</button>
+            <button class="btn" onclick="saveAndNotify()">Save & Apply</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN TIME PAGE -->
+      <section class="page" id="screen">
+        <h2>Screen Time</h2>
+        <div class="card">
+          <div class="field">
+            <label style="width:160px">Daily limit (minutes)</label>
+            <input type="number" id="screenLimit" min="0" placeholder="e.g., 120">
+          </div>
+          <div class="field">
+            <label style="width:160px">Bedtime block (from)</label>
+            <input type="time" id="sleepFrom">
+            <label style="width:60px;text-align:center">to</label>
+            <input type="time" id="sleepTo">
+          </div>
+          <div class="mutedSmall">Screen time rules applied to child's device.</div>
+          <div class="nextBtn">
+            <button class="btn ghost" onclick="goTo('content')">Next ➡ Content Filtering</button>
+            <button class="btn" onclick="saveAndNotify()">Save & Apply</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTENT FILTERING PAGE -->
+      <section class="page" id="content">
+        <h2>Content Filtering</h2>
+        <div class="card">
+          <div class="field">
+            <label style="width:160px">Filter Level</label>
+            <select id="filterLevel">
+              <option value="strict">Strict</option>
+              <option value="moderate">Moderate</option>
+              <option value="off">Off</option>
+            </select>
+          </div>
+          <div class="mutedSmall">Choose a content filtering strictness level.</div>
+          <div class="nextBtn">
+            <button class="btn ghost" onclick="goTo('cyber')">Next ➡ Cyber Safety</button>
+            <button class="btn" onclick="saveAndNotify()">Save & Apply</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- CYBER SAFETY PAGE -->
+      <section class="page" id="cyber">
+        <h2>Cyber Safety</h2>
+        <div class="card">
+          <div class="field">
+            <label><input type="checkbox" id="cyberBullying"> Cyberbullying Protection</label>
+          </div>
+          <div class="field">
+            <label><input type="checkbox" id="predatorAlert"> Predator Alerts</label>
+          </div>
+          <div class="mutedSmall">Safety features that notify the parent on suspicious patterns.</div>
+          <div class="nextBtn">
+            <button class="btn ghost" onclick="goTo('location')">Next ➡ Live Location</button>
+            <button class="btn" onclick="saveAndNotify()">Save & Apply</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- LOCATION PAGE -->
+      <section class="page" id="location">
+        <h2>Live Location</h2>
+        <div class="card">
+          <div id="locStatus">Fetching location / awaiting permission on device...</div>
+          <p class="mutedSmall">This demo will show browser geolocation (if allowed). In production this would use device SDKs & secure reporting.</p>
+          <div class="nextBtn">
+            <button class="btn ghost" onclick="goAfterLocation()">Finish</button>
+            <button class="btn" onclick="saveAndNotify()">Save & Apply</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHILD REQUESTS -->
+      <section class="page" id="requests">
+        <h2>Child Requests</h2>
+        <div class="card">
+          <div>
+            <strong>Pending requests</strong>
+            <div class="requestList" id="requestList"></div>
+            <div style="margin-top:8px">
+              <button class="btn" onclick="approveAll()">Approve All</button>
+              <button class="btn ghost" onclick="clearRequests()">Clear</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SUMMARY (Parent only) -->
+      <section class="page" id="summary">
+        <h2>Summary (Parent Only)</h2>
+        <div class="card">
+          <p><strong>Blocked Apps:</strong> <span id="sumApps"></span></p>
+          <p><strong>Blocked Websites:</strong> <span id="sumWeb"></span></p>
+          <p><strong>Blocked Keywords:</strong> <span id="sumKeys"></span></p>
+          <p><strong>Screen Time Limit:</strong> <span id="sumScreen"></span></p>
+          <p><strong>Content Filter:</strong> <span id="sumFilter"></span></p>
+          <p><strong>Cyber Safety:</strong> <span id="sumCyber"></span></p>
+          <div style="margin-top:12px">
+            <button class="btn" onclick="exportConfig()">Export Config</button>
+            <button class="btn ghost" onclick="goTo('settings')">Settings</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS (Parent only) -->
+      <section class="page" id="settings">
+        <h2>Settings</h2>
+        <div class="card">
+          <div class="field">
+            <label style="width:180px">Parent Password</label>
+            <input type="password" id="parentPassword" placeholder="Enter new password">
+            <button class="btn" onclick="changePassword()">Change</button>
+          </div>
+          <div class="field">
+            <label style="width:180px">Allow Child Edit</label>
+            <label class="mutedSmall"><input type="checkbox" id="allowChildEdit"> When enabled, child can directly edit settings</label>
+          </div>
+          <div class="field">
+            <label style="width:180px">Reset to demo defaults</label>
+            <button class="btn ghost" onclick="resetDemo()">Reset</button>
+          </div>
+          <div class="space"></div>
+          <div class="mutedSmall">Note: This demo stores everything in your browser localStorage.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+/* ---------- State and persistence ---------- */
+const STORAGE_KEY = 'aura_demo_config_v1';
+let state = {
+  blockedApps: ['YouTube','Instagram'],
+  blockedWebsites: ['example.com'],
+  blockedKeywords: ['violence','drugs'],
+  screenLimitMin: 120,
+  sleepFrom: '22:00',
+  sleepTo: '07:00',
+  filterLevel: 'moderate',
+  cyberBullying: true,
+  predatorAlert: true,
+  childRequests: [], // {id,msg,when}
+  allowChildEdit: false,
+  parentPassword: '1234'
+};
+
+// load saved or init
+function loadState(){
+  try{
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if(saved) state = JSON.parse(saved);
+  }catch(e){ console.warn('load failed',e) }
+}
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  refreshUI();
+}
+
+/* ---------- Role handling ---------- */
+let role = null; // 'parent' or 'child'
+
+document.getElementById('btnParent').addEventListener('click', ()=>{
+  const pass = prompt('Enter parent password:','');
+  loadState();
+  if(pass === state.parentPassword){
+    role = 'parent';
+    startApp();
+  } else {
+    alert('Wrong password');
+  }
+});
+document.getElementById('btnChild').addEventListener('click', ()=>{
+  loadState();
+  role = 'child';
+  startApp();
+});
+
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  role = null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('roleWrap').style.display='flex';
+});
+
+/* ---------- Init app view ---------- */
+function startApp(){
+  document.getElementById('roleWrap').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('roleTag').innerText = role === 'parent' ? 'Parent' : 'Child';
+  document.getElementById('userRole').innerText = role === 'parent' ? 'Parent' : 'Child';
+  loadState();
+  applyRoleRestrictions();
+  wireNav();
+  refreshUI();
+}
+
+/* ---------- Navigation ---------- */
+function wireNav(){
+  document.querySelectorAll('.navItem').forEach(btn=>{
+    btn.addEventListener('click', ()=> {
+      const page = btn.getAttribute('data-page');
+      goTo(page);
+    });
+  });
+}
+
+function goTo(page){
+  // hide all pages
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  // show page
+  const el = document.getElementById(page);
+  if(!el) return;
+  // role based visibility
+  if(role === 'child' && (page === 'settings' || page === 'summary' || page === 'requests') ){
+    // child can't see these pages, instead show a friendly message and redirect to dashboard
+    alert('This page is for Parents only.');
+    document.getElementById('dashboard').classList.add('active');
+    return;
+  }
+  el.classList.add('active');
+  // update nav active
+  document.querySelectorAll('.navItem').forEach(n=>n.classList.toggle('active', n.getAttribute('data-page')===page));
+  // page-specific refresh
+  if(page === 'apps') renderApps();
+  if(page === 'websites') renderWeb();
+  if(page === 'keywords') renderKeys();
+  if(page === 'screen') renderScreen();
+  if(page === 'content') renderContent();
+  if(page === 'cyber') renderCyber();
+  if(page === 'location') updateLocationUI();
+  if(page === 'requests') renderRequests();
+  if(page === 'summary') renderSummary();
+  if(page === 'settings') renderSettings();
+}
+
+/* ---------- Role restrictions & child edit behavior ---------- */
+function applyRoleRestrictions(){
+  // hide parent-only nav buttons for child
+  const blockedForChild = ['settings','summary','requests'];
+  if(role === 'child'){
+    // hide those nav buttons visually
+    document.querySelectorAll('.navItem').forEach(n=>{
+      const p = n.getAttribute('data-page');
+      if(blockedForChild.includes(p)) n.style.display='none';
+      else n.style.display='block';
+    });
+    // show "child" badge style
+    document.getElementById('dashRole').innerText = 'Child';
+    document.getElementById('dashRole').style.background = '#f97316'; // orange
+    document.getElementById('dashAllowChild').innerText = state.allowChildEdit ? 'Yes' : 'No';
+  } else {
+    document.querySelectorAll('.navItem').forEach(n=>n.style.display='block');
+    document.getElementById('dashRole').innerText = 'Parent';
+    document.getElementById('dashRole').style.background = 'var(--primary)';
+    document.getElementById('dashAllowChild').innerText = state.allowChildEdit ? 'Yes' : 'No';
+  }
+}
+
+/* ---------- UI refreshers ---------- */
+function refreshUI(){
+  // quick counts
+  document.getElementById('qApps').innerText = state.blockedApps.length;
+  document.getElementById('qWeb').innerText = state.blockedWebsites.length;
+  document.getElementById('qKeys').innerText = state.blockedKeywords.length;
+  document.getElementById('qScreen').innerText = state.screenLimitMin || 0;
+  document.getElementById('qReq').innerText = state.childRequests.length;
+
+  // update summary values if visible
+  if(document.getElementById('sumApps')) document.getElementById('sumApps').innerText = state.blockedApps.join(', ');
+  if(document.getElementById('sumWeb')) document.getElementById('sumWeb').innerText = state.blockedWebsites.join(', ');
+  if(document.getElementById('sumKeys')) document.getElementById('sumKeys').innerText = state.blockedKeywords.join(', ');
+  if(document.getElementById('sumScreen')) document.getElementById('sumScreen').innerText = (state.screenLimitMin||0)+' min, bedtime '+(state.sleepFrom||'')+'–'+(state.sleepTo||'');
+  if(document.getElementById('sumFilter')) document.getElementById('sumFilter').innerText = state.filterLevel;
+  if(document.getElementById('sumCyber')) document.getElementById('sumCyber').innerText = (state.cyberBullying? 'CYBERBULLYING ON ':'') + (state.predatorAlert? 'PREDATOR ALERTS ON' : '');
+
+  applyRoleRestrictions();
+}
+
+/* ---------- Render pages ---------- */
+function renderApps(){
+  const list = document.getElementById('appsList');
+  list.innerHTML='';
+  state.blockedApps.forEach((a,i)=>{
+    const chip = document.createElement('div'); chip.className='chip';
+    chip.innerHTML = `<span>${a}</span> <button title="remove" onclick="removeApp(${i})">✕</button>`;
+    list.appendChild(chip);
+  });
+  // controls enable/disable for child
+  document.getElementById('appInput').disabled = (role==='child' && !state.allowChildEdit);
+  document.getElementById('addAppBtn').disabled = (role==='child' && !state.allowChildEdit);
+  if(role==='child' && !state.allowChildEdit){
+    // show a request button for child to ask parent to add/remove
+    if(!document.getElementById('childRequestAddApp')){
+      const btn = document.createElement('button'); btn.className='btn ghost'; btn.id='childRequestAddApp';
+      btn.innerText = 'Request Change';
+      btn.onclick = ()=>{ makeChildRequest('Request: change blocked apps') }
+      list.parentNode.appendChild(btn);
+    }
+  } else {
+    const ex = document.getElementById('childRequestAddApp'); if(ex) ex.remove();
+  }
+}
+
+function renderWeb(){
+  const list = document.getElementById('webList'); list.innerHTML='';
+  state.blockedWebsites.forEach((a,i)=>{
+    const chip = document.createElement('div'); chip.className='chip';
+    chip.innerHTML = `<span>${a}</span> <button title="remove" onclick="removeWeb(${i})">✕</button>`;
+    list.appendChild(chip);
+  });
+  document.getElementById('webInput').disabled = (role==='child' && !state.allowChildEdit);
+  document.getElementById('addWebBtn').disabled = (role==='child' && !state.allowChildEdit);
+  if(role==='child' && !state.allowChildEdit){
+    if(!document.getElementById('childRequestWeb')){
+      const btn = document.createElement('button'); btn.className='btn ghost'; btn.id='childRequestWeb';
+      btn.innerText = 'Request Change';
+      btn.onclick = ()=>{ makeChildRequest('Request: change blocked websites') }
+      list.parentNode.appendChild(btn);
+    }
+  } else { const ex = document.getElementById('childRequestWeb'); if(ex) ex.remove(); }
+}
+
+function renderKeys(){
+  const list = document.getElementById('keyList'); list.innerHTML='';
+  state.blockedKeywords.forEach((a,i)=>{
+    const chip = document.createElement('div'); chip.className='chip';
+    chip.innerHTML = `<span>${a}</span> <button title="remove" onclick="removeKey(${i})">✕</button>`;
+    list.appendChild(chip);
+  });
+  document.getElementById('keyInput').disabled = (role==='child' && !state.allowChildEdit);
+  document.getElementById('addKeyBtn').disabled = (role==='child' && !state.allowChildEdit);
+  if(role==='child' && !state.allowChildEdit){
+    if(!document.getElementById('childRequestKey')){
+      const btn = document.createElement('button'); btn.className='btn ghost'; btn.id='childRequestKey';
+      btn.innerText = 'Request Change';
+      btn.onclick = ()=>{ makeChildRequest('Request: change blocked keywords') }
+      list.parentNode.appendChild(btn);
+    }
+  } else { const ex = document.getElementById('childRequestKey'); if(ex) ex.remove(); }
+}
+
+function renderScreen(){
+  document.getElementById('screenLimit').value = state.screenLimitMin || '';
+  document.getElementById('sleepFrom').value = state.sleepFrom || '';
+  document.getElementById('sleepTo').value = state.sleepTo || '';
+  document.getElementById('screenLimit').disabled = (role==='child' && !state.allowChildEdit);
+  document.getElementById('sleepFrom').disabled = (role==='child' && !state.allowChildEdit);
+  document.getElementById('sleepTo').disabled = (role==='child' && !state.allowChildEdit);
+  // child request button
+  const card = document.getElementById('screen').querySelector('.card');
+  const btnId = 'childRequestScreen';
+  if(role==='child' && !state.allowChildEdit){
+    if(!document.getElementById(btnId)){
+      const btn = document.createElement('button'); btn.className='btn ghost'; btn.id=btnId;
+      btn.innerText = 'Request Change';
+      btn.onclick = ()=> makeChildRequest('Request: screen time change');
+      card.appendChild(btn);
+    }
+  } else {
+    const ex = document.getElementById(btnId); if(ex) ex.remove();
+  }
+}
+
+function renderContent(){
+  document.getElementById('filterLevel').value = state.filterLevel || 'moderate';
+  document.getElementById('filterLevel').disabled = (role==='child' && !state.allowChildEdit);
+  const btnId = 'childRequestContent';
+  const card = document.getElementById('content').querySelector('.card');
+  if(role==='child' && !state.allowChildEdit){
+    if(!document.getElementById(btnId)){
+      const btn = document.createElement('button'); btn.className='btn ghost'; btn.id=btnId;
+      btn.innerText = 'Request Change';
+      btn.onclick = ()=> makeChildRequest('Request: content filter change');
+      card.appendChild(btn);
+    }
+  } else { const ex = document.getElementById(btnId); if(ex) ex.remove(); }
+}
+
+function renderCyber(){
+  document.getElementById('cyberBullying').checked = !!state.cyberBullying;
+  document.getElementById('predatorAlert').checked = !!state.predatorAlert;
+  document.getElementById('cyberBullying').disabled = (role==='child' && !state.allowChildEdit);
+  document.getElementById('predatorAlert').disabled = (role==='child' && !state.allowChildEdit);
+  const btnId = 'childRequestCyber';
+  const card = document.getElementById('cyber').querySelector('.card');
+  if(role==='child' && !state.allowChildEdit){
+    if(!document.getElementById(btnId)){
+      const btn = document.createElement('button'); btn.className='btn ghost'; btn.id=btnId;
+      btn.innerText = 'Request Change';
+      btn.onclick = ()=> makeChildRequest('Request: cyber safety change');
+      card.appendChild(btn);
+    }
+  } else { const ex = document.getElementById(btnId); if(ex) ex.remove(); }
+}
+
+function renderRequests(){
+  const el = document.getElementById('requestList'); el.innerHTML='';
+  if(state.childRequests.length===0){ el.innerHTML = '<div class="mutedSmall">No requests</div>'; return; }
+  state.childRequests.forEach((r,i)=>{
+    const div = document.createElement('div'); div.className='card';
+    div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
+      <div><strong>${r.msg}</strong><div class="mutedSmall">${new Date(r.when).toLocaleString()}</div></div>
+      <div><button class="btn" onclick="approveRequest(${i})">Approve</button><button class="btn ghost" style="margin-left:8px" onclick="declineRequest(${i})">Decline</button></div>
+    </div>`;
+    el.appendChild(div);
+  });
+}
+
+/* ---------- CRUD helpers ---------- */
+function addApp(){
+  const v = document.getElementById('appInput').value.trim();
+  if(!v) return alert('Provide app name');
+  if(role==='child' && !state.allowChildEdit){
+    return makeChildRequest(`Request add app: ${v}`);
+  }
+  state.blockedApps.push(v); document.getElementById('appInput').value=''; saveState();
+  renderApps();
+}
+function removeApp(i){
+  if(role==='child' && !state.allowChildEdit){
+    return makeChildRequest(`Request remove app: ${state.blockedApps[i]}`);
+  }
+  state.blockedApps.splice(i,1); saveState(); renderApps();
+}
+function addWeb(){
+  const v = document.getElementById('webInput').value.trim();
+  if(!v) return alert('Provide domain');
+  if(role==='child' && !state.allowChildEdit) return makeChildRequest(`Request add website: ${v}`);
+  state.blockedWebsites.push(v); document.getElementById('webInput').value=''; saveState(); renderWeb();
+}
+function removeWeb(i){
+  if(role==='child' && !state.allowChildEdit) return makeChildRequest(`Request remove website: ${state.blockedWebsites[i]}`);
+  state.blockedWebsites.splice(i,1); saveState(); renderWeb();
+}
+function addKey(){
+  const v = document.getElementById('keyInput').value.trim();
+  if(!v) return alert('Provide keyword');
+  if(role==='child' && !state.allowChildEdit) return makeChildRequest(`Request add keyword: ${v}`);
+  state.blockedKeywords.push(v); document.getElementById('keyInput').value=''; saveState(); renderKeys();
+}
+function removeKey(i){
+  if(role==='child' && !state.allowChildEdit) return makeChildRequest(`Request remove keyword: ${state.blockedKeywords[i]}`);
+  state.blockedKeywords.splice(i,1); saveState(); renderKeys();
+}
+
+/* ---------- Save & notify (apply) ---------- */
+function saveAndNotify(){
+  // read screen & content & cyber inputs
+  state.screenLimitMin = parseInt(document.getElementById('screenLimit').value) || state.screenLimitMin;
+  state.sleepFrom = document.getElementById('sleepFrom').value || state.sleepFrom;
+  state.sleepTo = document.getElementById('sleepTo').value || state.sleepTo;
+  state.filterLevel = document.getElementById('filterLevel').value || state.filterLevel;
+  state.cyberBullying = !!document.getElementById('cyberBullying').checked;
+  state.predatorAlert = !!document.getElementById('predatorAlert').checked;
+  saveState();
+  alert('Settings saved and applied to child device (demo).');
+}
+
+/* ---------- Child request workflow ---------- */
+function makeChildRequest(msg){
+  const r = { id: Date.now(), msg, when: Date.now() };
+  state.childRequests.push(r);
+  saveState();
+  alert('Request sent to parent.');
+  refreshUI();
+}
+function approveRequest(i){
+  // naive approve: when approve, we just pop it and notify (in real app parent would act)
+  const req = state.childRequests.splice(i,1)[0];
+  saveState();
+  alert('Approved: ' + req.msg);
+  renderRequests();
+}
+function declineRequest(i){
+  const req = state.childRequests.splice(i,1)[0];
+  saveState();
+  renderRequests();
+}
+function approveAll(){
+  // in demo, approving all just clears list
+  state.childRequests = []; saveState(); renderRequests(); alert('All approved (demo).');
+}
+function clearRequests(){ state.childRequests = []; saveState(); renderRequests(); }
+
+/* ---------- Requests helpers ---------- */
+function exportConfig(){
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'aura_config.json'; a.click(); URL.revokeObjectURL(url);
+}
+
+/* ---------- Settings ---------- */
+function changePassword(){
+  if(role !== 'parent'){ alert('Parent only'); return; }
+  const v = document.getElementById('parentPassword').value.trim();
+  if(!v) return alert('Enter new password');
+  state.parentPassword = v; document.getElementById('parentPassword').value=''; saveState();
+  alert('Password changed');
+}
+function renderSettings(){
+  document.getElementById('allowChildEdit').checked = !!state.allowChildEdit;
+  document.getElementById('allowChildEdit').onchange = (e)=>{ state.allowChildEdit = e.target.checked; saveState(); };
+}
+function resetDemo(){
+  if(!confirm('Reset demo data?')) return;
+  state = {
+    blockedApps: ['YouTube','Instagram'],
+    blockedWebsites: ['example.com'],
+    blockedKeywords: ['violence','drugs'],
+    screenLimitMin: 120,
+    sleepFrom: '22:00',
+    sleepTo: '07:00',
+    filterLevel: 'moderate',
+    cyberBullying: true,
+    predatorAlert: true,
+    childRequests: [],
+    allowChildEdit: false,
+    parentPassword: '1234'
+  };
+  saveState(); alert('Reset done');
+}
+
+/* ---------- Summary ---------- */
+function renderSummary(){
+  renderRequests(); // refresh counts
+  refreshUI();
+}
+
+/* ---------- Location (demo) ---------- */
+function updateLocationUI(){
+  const el = document.getElementById('locStatus');
+  if(!navigator.geolocation){
+    el.innerText = 'Geolocation not supported in this browser.';
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    el.innerHTML = `<strong>Lat:</strong> ${pos.coords.latitude.toFixed(4)} <strong>Lon:</strong> ${pos.coords.longitude.toFixed(4)} <div class="mutedSmall">Accuracy: ${pos.coords.accuracy}m</div>`;
+  }, err=>{
+    el.innerText = 'Location denied or unavailable. In production, the child device would push location to parent dashboard.';
+  }, {enableHighAccuracy:true, maximumAge:60000});
+}
+
+/* ---------- Approve/decline helpers ---------- */
+function approveRequestById(id){
+  const idx = state.childRequests.findIndex(r=>r.id===id);
+  if(idx>=0) approveRequest(idx);
+}
+
+/* ---------- After finishing location (demo flow) ---------- */
+function goAfterLocation(){
+  if(role === 'parent') goTo('settings');
+  else {
+    alert('✅ Restrictions applied by Parent (demo). Returning to start.');
+    document.getElementById('app').style.display='none';
+    document.getElementById('roleWrap').style.display='flex';
+  }
+}
+
+/* ---------- Misc UI actions ---------- */
+document.getElementById('addAppBtn').addEventListener('click', addApp);
+document.getElementById('addWebBtn').addEventListener('click', addWeb);
+document.getElementById('addKeyBtn').addEventListener('click', addKey);
+
+document.getElementById('appsList').addEventListener('click', (e)=>{});
+document.getElementById('webList').addEventListener('click', (e)=>{});
+document.getElementById('keyList').addEventListener('click', (e)=>{});
+
+/* ---------- initial load ---------- */
+loadState();
+refreshUI();
+</script>
+</body>
+</html>
