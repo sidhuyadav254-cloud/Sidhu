@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Aura-like Parental Control — Backend Connected</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f6f9; --card:#fff; --primary:#4f46e5; --danger:#ef4444; --success:#22c55e;
+  }
+  body{margin:0;font-family:'Poppins',sans-serif;background:var(--bg);}
+  .container{max-width:1200px;margin:auto;padding:20px;}
+  h2{color:var(--primary);}
+  .card{background:var(--card);padding:20px;margin:10px 0;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+  input, select, textarea, button{padding:8px;margin:5px 0;width:100%;border-radius:5px;border:1px solid #ccc;}
+  button{cursor:pointer;background:var(--primary);color:#fff;border:none;}
+  button.danger{background:var(--danger);}
+  button.success{background:var(--success);}
+  ul{list-style:none;padding:0;}
+  li{padding:5px 0;display:flex;justify-content:space-between;align-items:center;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Aura Parental Control — Backend Connected</h2>
+
+  <div class="card">
+    <h3>Blocked Apps</h3>
+    <ul id="blockedAppsList"></ul>
+    <input type="text" id="newApp" placeholder="Add new app">
+    <button onclick="addApp()">Add App</button>
+  </div>
+
+  <div class="card">
+    <h3>Blocked Websites</h3>
+    <ul id="blockedWebsitesList"></ul>
+    <input type="text" id="newWebsite" placeholder="Add new website">
+    <button onclick="addWebsite()">Add Website</button>
+  </div>
+
+  <div class="card">
+    <h3>Blocked Keywords</h3>
+    <ul id="blockedKeywordsList"></ul>
+    <input type="text" id="newKeyword" placeholder="Add new keyword">
+    <button onclick="addKeyword()">Add Keyword</button>
+  </div>
+
+  <div class="card">
+    <h3>Screen Time & Bedtime</h3>
+    <label>Screen Limit (minutes)</label>
+    <input type="number" id="screenLimit">
+    <label>Sleep From</label>
+    <input type="time" id="sleepFrom">
+    <label>Sleep To</label>
+    <input type="time" id="sleepTo">
+  </div>
+
+  <div class="card">
+    <h3>Content Filter</h3>
+    <select id="filterLevel">
+      <option value="off">Off</option>
+      <option value="moderate">Moderate</option>
+      <option value="strict">Strict</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <h3>Cyber Safety</h3>
+    <label><input type="checkbox" id="cyberBullying"> Cyber Bullying Alerts</label>
+    <label><input type="checkbox" id="predatorAlert"> Predator Alerts</label>
+  </div>
+
+  <div class="card">
+    <h3>Settings</h3>
+    <label>Parent Password</label>
+    <input type="text" id="parentPassword">
+    <label><input type="checkbox" id="allowChildEdit"> Allow Child Edit</label>
+    <button onclick="saveState()">Save Settings</button>
+  </div>
+
+  <div class="card">
+    <h3>Child Requests</h3>
+    <ul id="childRequestsList"></ul>
+    <input type="text" id="newRequest" placeholder="Child request message">
+    <button onclick="addChildRequest()">Add Request</button>
+    <button class="success" onclick="approveAllRequests()">Approve All</button>
+  </div>
+</div>
+
+<script>
+let state = {};
+
+async function loadState(){
+  const res = await fetch('http://127.0.0.1:5000/api/get_state');
+  state = await res.json();
+  renderState();
+}
+
+function renderState(){
+  // Blocked Apps
+  const appsList = document.getElementById('blockedAppsList');
+  appsList.innerHTML = '';
+  state.blockedApps.forEach((a,i)=>{
+    const li = document.createElement('li');
+    li.textContent = a;
+    const btn = document.createElement('button'); btn.textContent='Remove'; btn.className='danger';
+    btn.onclick = ()=>{ state.blockedApps.splice(i,1); renderState(); };
+    li.appendChild(btn);
+    appsList.appendChild(li);
+  });
+
+  // Blocked Websites
+  const webList = document.getElementById('blockedWebsitesList');
+  webList.innerHTML = '';
+  state.blockedWebsites.forEach((w,i)=>{
+    const li = document.createElement('li');
+    li.textContent = w;
+    const btn = document.createElement('button'); btn.textContent='Remove'; btn.className='danger';
+    btn.onclick = ()=>{ state.blockedWebsites.splice(i,1); renderState(); };
+    li.appendChild(btn);
+    webList.appendChild(li);
+  });
+
+  // Blocked Keywords
+  const kwList = document.getElementById('blockedKeywordsList');
+  kwList.innerHTML = '';
+  state.blockedKeywords.forEach((k,i)=>{
+    const li = document.createElement('li');
+    li.textContent = k;
+    const btn = document.createElement('button'); btn.textContent='Remove'; btn.className='danger';
+    btn.onclick = ()=>{ state.blockedKeywords.splice(i,1); renderState(); };
+    li.appendChild(btn);
+    kwList.appendChild(li);
+  });
+
+  // Screen & Sleep
+  document.getElementById('screenLimit').value = state.screenLimitMin;
+  document.getElementById('sleepFrom').value = state.sleepFrom;
+  document.getElementById('sleepTo').value = state.sleepTo;
+
+  // Filter
+  document.getElementById('filterLevel').value = state.filterLevel;
+
+  // Cyber Safety
+  document.getElementById('cyberBullying').checked = state.cyberBullying;
+  document.getElementById('predatorAlert').checked = state.predatorAlert;
+
+  // Settings
+  document.getElementById('parentPassword').value = state.parentPassword;
+  document.getElementById('allowChildEdit').checked = state.allowChildEdit;
+
+  // Child Requests
+  const reqList = document.getElementById('childRequestsList');
+  reqList.innerHTML = '';
+  state.childRequests.forEach(r=>{
+    const li = document.createElement('li');
+    li.textContent = r.msg+' ('+new Date(r.when).toLocaleString()+')';
+    const btn = document.createElement('button'); btn.textContent='Approve'; btn.className='success';
+    btn.onclick = ()=>approveRequest(r.id);
+    li.appendChild(btn);
+    reqList.appendChild(li);
+  });
+}
+
+// Add New Items
+function addApp(){ const val=document.getElementById('newApp').value; if(val){ state.blockedApps.push(val); renderState(); document.getElementById('newApp').value=''; } }
+function addWebsite(){ const val=document.getElementById('newWebsite').value; if(val){ state.blockedWebsites.push(val); renderState(); document.getElementById('newWebsite').value=''; } }
+function addKeyword(){ const val=document.getElementById('newKeyword').value; if(val){ state.blockedKeywords.push(val); renderState(); document.getElementById('newKeyword').value=''; } }
+
+// Save State to Backend
+async function saveState(){
+  state.screenLimitMin = parseInt(document.getElementById('screenLimit').value);
+  state.sleepFrom = document.getElementById('sleepFrom').value;
+  state.sleepTo = document.getElementById('sleepTo').value;
+  state.filterLevel = document.getElementById('filterLevel').value;
+  state.cyberBullying = document.getElementById('cyberBullying').checked;
+  state.predatorAlert = document.getElementById('predatorAlert').checked;
+  state.parentPassword = document.getElementById('parentPassword').value;
+  state.allowChildEdit = document.getElementById('allowChildEdit').checked;
+
+  await fetch('http://127.0.0.1:5000/api/save_state',{
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(state)
+  });
+  alert('Settings saved to backend');
+}
+
+// Child Requests
+async function addChildRequest(){
+  const msg = document.getElementById('newRequest').value;
+  if(!msg) return;
+  await fetch('http://127.0.0.1:5000/api/add_request',{
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({msg})
+  });
+  document.getElementById('newRequest').value='';
+  loadState();
+}
+
+async function approveRequest(id){
+  await fetch('http://127.0.0.1:5000/api/approve_request',{
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id})
+  });
+  loadState();
+}
+
+async function approveAllRequests(){
+  await fetch('http://127.0.0.1:5000/api/approve_all',{method:'POST'});
+  loadState();
+}
+
+loadState();
+</script>
+</body>
+</html>
