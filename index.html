@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aura Parental Control — Full Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f6ff; --card:#ffffff; --primary:#0062ff; --accent:#2575fc; --muted:#6b7280; --shadow:0 6px 18px rgba(2,6,23,0.08);
+}
+*{box-sizing:border-box;font-family:'Poppins',sans-serif} 
+body{margin:0;background:var(--bg);min-height:100vh;color:#111}
+#roleWrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:50}
+.roleCard{width:960px;max-width:96%;display:flex;gap:24px;background:var(--card);padding:28px;border-radius:14px;box-shadow:var(--shadow);align-items:center}
+.roleLeft{flex:1} .roleRight{width:320px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.roleBtn{width:100%;padding:12px 14px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer}
+.roleBtn.secondary{background:#e6f0ff;color:var(--primary);border:1px solid var(--primary)}
+.small{color:var(--muted);font-size:13px} #app{display:none;margin:24px auto;max-width:1100px;background:transparent;border-radius:12px;overflow:hidden;min-height:70vh}
+.topbar{display:flex;align-items:center;gap:20px;padding:14px 20px;background:transparent} 
+.brand{display:flex;gap:10px;align-items:center} 
+.brand h1{font-size:20px;margin:0;color:var(--primary)} 
+.roleBadge{padding:6px 10px;border-radius:999px;background:var(--primary);color:#fff;font-weight:600;font-size:13px}
+.container{display:flex;gap:18px} 
+.sidebar{width:260px;background:var(--card);border-radius:12px;padding:14px;box-shadow:var(--shadow);height:70vh} 
+.sidebar .logo{font-weight:700;color:var(--primary);margin-bottom:12px} 
+.nav{display:flex;flex-direction:column;gap:6px} 
+.nav button{background:transparent;border:none;text-align:left;padding:10px;border-radius:8px;cursor:pointer;font-weight:600;color:#123} 
+.nav button.active{background:linear-gradient(90deg,var(--primary),var(--accent));color:#fff;box-shadow:0 6px 18px rgba(0,98,255,0.14)}
+.content{flex:1;background:var(--card);border-radius:12px;padding:18px;box-shadow:var(--shadow);min-height:70vh;overflow:auto} 
+.page{display:none} 
+.page.active{display:block} 
+.page h2{margin:0 0 12px 0;color:var(--primary)} 
+.card{background:linear-gradient(180deg,#fff,#fbfdff);padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(2,6,23,0.04);margin-bottom:12px}
+.field{display:flex;gap:8px;align-items:center;margin:8px 0} 
+input[type=text], input[type=password], input[type=number], select{padding:8px 10px;border-radius:8px;border:1px solid #e6eefc;flex:1}
+.btn{padding:10px 14px;border-radius:8px;border:none;background:var(--primary);color:#fff;cursor:pointer;font-weight:600} 
+.btn.ghost{background:transparent;border:1px solid #e6eefc;color:var(--primary)}
+.list{display:flex;flex-wrap:wrap;gap:8px} 
+.chip{background:#f3f6ff;padding:8px 10px;border-radius:8px;display:flex;gap:8px;align-items:center} 
+.chip button{border:none;background:transparent;color:var(--muted);cursor:pointer}
+.muted{color:var(--muted)} 
+.flex{display:flex;gap:10px;align-items:center} 
+.rightTop{margin-left:auto;display:flex;gap:10px;align-items:center} 
+.smallBadge{font-size:12px;padding:6px 10px;border-radius:999px;background:#eef3ff;color:var(--primary);font-weight:700}
+.warning{color:#b45309;background:#fff7ed;padding:8px;border-radius:8px} 
+@media(max-width:900px){.roleCard{flex-direction:column;align-items:stretch}.sidebar{display:none}.roleWrap{padding:8px}#app{margin:8px}}
+.mutedSmall{font-size:13px;color:var(--muted)} 
+.center{display:flex;align-items:center;justify-content:center} 
+.space{height:10px} 
+.nextBtn{margin-top:12px} 
+.danger{background:#ffecec;color:#b91c1c;padding:8px;border-radius:8px} 
+.requestList{max-height:160px;overflow:auto;padding:6px}
+</style>
+</head>
+<body>
+
+<div id="roleWrap">
+  <div class="roleCard">
+    <div class="roleLeft">
+      <h2 style="margin:0 0 8px 0">Aura Parental Control — Demo</h2>
+      <p class="small">Select role: Parent (full access) or Child (restricted). Default password: <code>1234</code></p>
+    </div>
+    <div class="roleRight">
+      <button class="roleBtn" id="btnParent">I am Parent</button>
+      <button class="roleBtn secondary" id="btnChild">I am Child</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><h1>Aura Demo</h1><div id="roleTag" class="roleBadge" style="margin-left:8px">Parent</div></div>
+    <div class="rightTop">
+      <div id="userInfo" class="mutedSmall">User: <span id="userRole">Parent</span></div>
+      <button class="btn ghost" id="logoutBtn">Logout</button>
+    </div>
+  </div>
+  <div class="container">
+    <aside class="sidebar">
+      <div class="logo">Aura • Controls</div>
+      <nav class="nav" id="navList">
+        <button data-page="dashboard" class="navItem active">Dashboard</button>
+        <button data-page="apps" class="navItem">Blocked Apps</button>
+        <button data-page="websites" class="navItem">Blocked Websites</button>
+        <button data-page="keywords" class="navItem">Blocked Keywords</button>
+        <button data-page="screen" class="navItem">Screen Time</button>
+        <button data-page="content" class="navItem">Content Filtering</button>
+        <button data-page="cyber" class="navItem">Cyber Safety</button>
+        <button data-page="location" class="navItem">Live Location</button>
+        <button data-page="requests" class="navItem">Child Requests</button>
+        <button data-page="summary" class="navItem">Summary</button>
+        <button data-page="settings" class="navItem">Settings</button>
+      </nav>
+    </aside>
+    <main class="content">
+      <!-- Pages -->
+      <section class="page active" id="dashboard"><h2>Dashboard</h2></section>
+      <section class="page" id="apps"><h2>Blocked Apps</h2>
+        <div class="field"><input type="text" id="appInput" placeholder="Type app name"><button class="btn" id="addAppBtn">Add</button></div>
+        <div class="list" id="appsList"></div>
+      </section>
+      <section class="page" id="websites"><h2>Blocked Websites</h2>
+        <div class="field"><input type="text" id="webInput" placeholder="Type domain"><button class="btn" id="addWebBtn">Add</button></div>
+        <div class="list" id="webList"></div>
+      </section>
+      <section class="page" id="keywords"><h2>Blocked Keywords</h2>
+        <div class="field"><input type="text" id="keyInput" placeholder="Type keyword"><button class="btn" id="addKeyBtn">Add</button></div>
+        <div class="list" id="keyList"></div>
+      </section>
+      <section class="page" id="requests"><h2>Child Requests</h2>
+        <div class="requestList" id="requestList"></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+let state = { blockedApps:[], blockedWebsites:[], blockedKeywords:[], childRequests:[] };
+let role = null;
+
+async function loadState(){
+  try{
+    const res = await fetch('http://127.0.0.1:5000/api/get_state');
+    state = await res.json();
+    renderAll();
+  } catch(e){ console.error(e); }
+}
+
+async function saveState(){
+  try{
+    await fetch('http://127.0.0.1:5000/api/save_state',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(state)
+    });
+  } catch(e){ console.error(e); }
+}
+
+function renderAll(){
+  const appsList = document.getElementById('appsList'); appsList.innerHTML='';
+  state.blockedApps.forEach((a,i)=>{
+    const chip = document.createElement('div'); chip.className='chip';
+    chip.innerHTML=`<span>${a}</span> <button onclick="removeApp(${i})">✕</button>`;
+    appsList.appendChild(chip);
+  });
+  const webList = document.getElementById('webList'); webList.innerHTML='';
+  state.blockedWebsites.forEach((w,i)=>{
+    const chip=document.createElement('div'); chip.className='chip';
+    chip.innerHTML=`<span>${w}</span> <button onclick="removeWeb(${i})">✕</button>`;
+    webList.appendChild(chip);
+  });
+  const keyList=document.getElementById('keyList'); keyList.innerHTML='';
+  state.blockedKeywords.forEach((k,i)=>{
+    const chip=document.createElement('div'); chip.className='chip';
+    chip.innerHTML=`<span>${k}</span> <button onclick="removeKey(${i})">✕</button>`;
+    keyList.appendChild(chip);
+  });
+  const reqList=document.getElementById('requestList'); reqList.innerHTML='';
+  state.childRequests.forEach(r=>{
+    const div=document.createElement('div'); div.className='chip';
+    div.textContent=r.msg+' ('+new Date(r.when).toLocaleString()+')';
+    reqList.appendChild(div);
+  });
+}
+
+function addApp(){ const v=document.getElementById('appInput').value.trim(); if(!v) return; state.blockedApps.push(v); document.getElementById('appInput').value=''; saveState(); renderAll(); }
+function removeApp(i){ state.blockedApps.splice(i,1); saveState(); renderAll(); }
+function addWeb(){ const v=document.getElementById('webInput').value.trim(); if(!v) return; state.blockedWebsites.push(v); document.getElementById('webInput').value=''; saveState(); renderAll(); }
+function removeWeb(i){ state.blockedWebsites.splice(i,1); saveState(); renderAll(); }
+function addKey(){ const v=document.getElementById('keyInput').value.trim(); if(!v) return; state.blockedKeywords.push(v); document.getElementById('keyInput').value=''; saveState(); renderAll(); }
+function removeKey(i){ state.blockedKeywords.splice(i,1); saveState(); renderAll(); }
+
+document.getElementById('addAppBtn').onclick=addApp;
+document.getElementById('addWebBtn').onclick=addWeb;
+document.getElementById('addKeyBtn').onclick=addKey;
+
+document.querySelectorAll('.navItem').forEach(btn=>{
+  btn.onclick=()=>{ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.querySelectorAll('.navItem').forEach(b=>b.classList.remove('active'));
+  document.getElementById(btn.dataset.page).classList.add('active'); btn.classList.add('active'); }
+});
+
+document.getElementById('btnParent').onclick=()=>{role='Parent'; enterApp();}
+document.getElementById('btnChild').onclick=()=>{role='Child'; enterApp();}
+document.getElementById('logoutBtn').onclick=()=>{role=null; document.getElementById('app').style.display='none'; document.getElementById('roleWrap').style.display='flex';}
+
+function enterApp(){
+  document.getElementById('roleWrap').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('roleTag').textContent=role;
+  document.getElementById('userRole').textContent=role;
+  loadState();
+}
+</script>
+
+</body>
+</html>
