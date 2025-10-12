@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Video Harmful Content Analyzer</title>
+</head>
+<body>
+  <h2>Upload Video to Analyze Harmful Content</h2>
+  <input type="file" id="videoInput" accept="video/*">
+  <button onclick="uploadVideo()">Analyze Video</button>
+  <div id="result" style="margin-top:20px; font-weight: bold;"></div>
+
+  <script>
+    async function uploadVideo() {
+      const input = document.getElementById('videoInput');
+      const file = input.files[0];
+
+      const resultDiv = document.getElementById('result');
+      resultDiv.textContent = '';
+
+      if (!file) {
+        resultDiv.textContent = 'Please select a video file first.';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const response = await fetch('/analyze', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          resultDiv.textContent = 'Error: ' + (errorData.error || 'Unknown error');
+          return;
+        }
+
+        const data = await response.json();
+        resultDiv.textContent =
+          `Harmful Content: ${data.harmful_content_percent}%
+` +
+          `Suggested Age Limit: ${data.suggested_age_limit}+`;
+      } catch (error) {
+        resultDiv.textContent = 'Error uploading file: ' + error.message;
+      }
+    }
+  </script>
+</body>
+</html>
